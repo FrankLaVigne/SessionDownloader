@@ -45,7 +45,7 @@ namespace SessionDownloader2019
 
             Console.WriteLine($"{sessions.Count} talks found.");
 
-            //DownloadSessions(sessions);
+            DownloadSessions(sessions);
 
             Console.WriteLine($"Finished at {DateTime.Now}");
 
