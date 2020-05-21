@@ -1,4 +1,4 @@
-# SessionDownloader2019
+# SessionDownloader
 Starting in 2019, Build used a differnt format/web site for storing slides and video presentations. This made the venerable version (https://github.com/FrankLaVigne/SessionDownloader) written for PDC 09 and subsequent events outdated. 
 
 ## Update: May 2020
