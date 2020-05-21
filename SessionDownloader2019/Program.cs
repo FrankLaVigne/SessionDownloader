@@ -56,7 +56,20 @@ namespace SessionDownloader2019
         private static string DownloadSessionMetaData()
         {
             WebClient webClient = new WebClient();
-            string sourceData = "https://api.mybuild.techcommunity.microsoft.com/api/session/all";
+
+            // TODO: find a more robust way to do this
+
+            // Build 2019
+            string build2019 = "https://api.mybuild.techcommunity.microsoft.com/api/session/all";
+            string build2020 = "https://api.mybuild.microsoft.com/api/session/all";
+
+            // Ignite 2019 
+            string ignite2019 = "https://api-myignite.techcommunity.microsoft.com/api/session/all";
+
+            // Build 2020
+            //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT152A
+
+            string sourceData = build2020;
 
             WriteHighlight("Starting Metadata Download");
             string allThatJson = webClient.DownloadString(sourceData);
@@ -87,53 +100,105 @@ namespace SessionDownloader2019
                 Console.WriteLine("*****************************");
                 Console.WriteLine($"Session: {session.title}");
 
-                if (session.slideDeck != string.Empty)
+                DownloadSlides(session);
+
+                DownloadVideo(session);
+
+            }
+        }
+
+        private static void DownloadVideo(dynamic session)
+        {
+
+            string downloadUrl = GetDownloadUrl(session);
+
+            if (downloadUrl != string.Empty)
+            {
+                Console.WriteLine("Video available.");
+
+                string remoteUri = downloadUrl;
+
+                string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
+                string destinationFilename = $"{arguments.DestinationPath}{session.sessionCode}-{scrubbedSessionTitle}.mp4";
+
+                if (File.Exists(destinationFilename) == true)
                 {
-                    Console.WriteLine("Slide deck available.");
+                    Console.WriteLine("File exists. Skipping");
+                }
+                else
+                {
+                    DownloadFile(remoteUri, destinationFilename);
+                }
+            }
+        }
 
-                    string remoteUri = session.slideDeck.ToString();
+        private static string GetDownloadUrl(dynamic session)
+        {
+            string downloadUrl = string.Empty;
 
-                    string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
-                    string destinationFilename = $"{arguments.DestinationPath}{scrubbedSessionTitle}.pptx";
+            if (session.downloadVideoLink != string.Empty && session.downloadVideoLink != null)
+            {
+                downloadUrl = session.downloadVideoLink;
+            }
+            else
+            {
+                
 
-                    if (File.Exists(destinationFilename) == true)
-                    {
-                        WriteWarning("File exists. Skipping");
-                    }
-                    else
-                    {
-                        try
-                        {
-                            DownloadFile(remoteUri, destinationFilename);
-                        }
-                        catch (Exception exception)
-                        {
-                            WriteError($"Error downloading {remoteUri} to {destinationFilename}");
-                        }
+                Console.WriteLine(session.onDemand);
 
-                    }
 
-                    Console.WriteLine($"{destinationFilename}");
+                string sessionCode = session.sessionCode;
+
+                if(session.onDemand == string.Empty || session.onDemand == null)
+                {
+                    downloadUrl = string.Empty;
+                }
+                else
+                {
+                    downloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4/B20-{sessionCode}";
+
                 }
 
-                if (session.downloadVideoLink != string.Empty)
+                //https://medius.studios.ms/Embed/video-nc/B20-BDL111
+                //https://medius.studios.ms/video/asset/HIGHMP4/B20-BDL101
+
+
+                //downloadUrl = session.onDemand;
+            }
+
+            return downloadUrl;
+
+        }
+
+        private static void DownloadSlides(dynamic session)
+        {
+            if (session.slideDeck != string.Empty)
+            {
+                Console.WriteLine("Slide deck available.");
+
+                string remoteUri = session.slideDeck.ToString();
+
+                string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
+                string destinationFilename = $"{arguments.DestinationPath}{scrubbedSessionTitle}.pptx";
+
+                if (File.Exists(destinationFilename) == true)
                 {
-                    Console.WriteLine("Video available.");
-
-                    string remoteUri = session.downloadVideoLink.ToString();
-
-                    string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
-                    string destinationFilename = $"{arguments.DestinationPath}{scrubbedSessionTitle}.mp4";
-
-                    if (File.Exists(destinationFilename) == true)
-                    {
-                        Console.WriteLine("File exists. Skipping");
-                    }
-                    else
+                    WriteWarning("File exists. Skipping");
+                }
+                else
+                {
+                    try
                     {
                         DownloadFile(remoteUri, destinationFilename);
                     }
+                    catch (Exception exception)
+                    {
+                        WriteError($"Error downloading {remoteUri} to {destinationFilename}");
+                    }
+
                 }
+
+                Console.WriteLine($"{destinationFilename}");
             }
         }
 
