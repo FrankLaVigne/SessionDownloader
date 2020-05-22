@@ -6,7 +6,7 @@ using System.Web;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 
-namespace SessionDownloader2019
+namespace SessionDownloader
 {
     class Program
     {
