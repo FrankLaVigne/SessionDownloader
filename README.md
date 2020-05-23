@@ -20,3 +20,9 @@ Starting in 2019, Build used a different system.
 I'd like to add parameters, IoC, and some other goodies to make this a tad more robust.
 
 Ok, a lot more robust.
+
+### Caption download support
+Now that captions are available, it would be nice to be able to download them in bulk as well.
+
+### Flexible architecture
+It would be nice to modularize the code so that adding a new event would be as easy as creating a JSON file
