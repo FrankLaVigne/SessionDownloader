@@ -94,16 +94,22 @@ namespace SessionDownloader
 
         private static void DownloadSessions(dynamic sessions)
         {
+            int i = 0;
+
             foreach (var session in sessions)
             {
 
                 Console.WriteLine("*****************************");
+                WriteHighlight($"Index: {i}");
                 Console.WriteLine($"Session: {session.title}");
+                Console.WriteLine($"Duration: {session.durationInMinutes}");
+                Console.WriteLine($"onDemandLink: {session.onDemand}");
 
                 DownloadSlides(session);
 
                 DownloadVideo(session);
 
+                i++;
             }
         }
 
@@ -128,6 +134,7 @@ namespace SessionDownloader
                 else
                 {
                     DownloadFile(remoteUri, destinationFilename);
+
                 }
             }
         }
@@ -142,10 +149,6 @@ namespace SessionDownloader
             }
             else
             {
-                
-
-                Console.WriteLine(session.onDemand);
-
 
                 string sessionCode = session.sessionCode;
 
@@ -155,7 +158,9 @@ namespace SessionDownloader
                 }
                 else
                 {
-                    downloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4/B20-{sessionCode}";
+                    string correctedSessionCode = InferCorrectedSessionCode(session);
+
+                    downloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4/{correctedSessionCode}";
 
                 }
 
@@ -168,6 +173,29 @@ namespace SessionDownloader
 
             return downloadUrl;
 
+        }
+
+        private static string InferCorrectedSessionCode(dynamic session)
+        {
+            // *************************************************************************
+            // What the embed link is
+            //https://medius.studios.ms/Embed/video-nc/B20-INT104B
+
+            // What the session code is
+            // B20-INT104C
+            // which gets turned into 
+            // https://medius.studios.ms/video/asset/HIGHMP4/B20-INT104C
+
+            // what actually works
+            //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT104B
+            // *************************************************************************
+
+            string embedPrefix = "https://medius.studios.ms/Embed/video-nc/";
+
+            string onDemandUrl = session.onDemand;
+
+            string correctedSessionCode = onDemandUrl.Replace(embedPrefix, string.Empty);
+            return correctedSessionCode;
         }
 
         private static void DownloadSlides(dynamic session)
@@ -208,9 +236,27 @@ namespace SessionDownloader
 
             using (WebClient wc = new WebClient())
             {
-                wc.DownloadFile(remoteUri, destinationFilename);
 
-                Console.WriteLine($"\t Download completed at {DateTime.Now}");
+                try
+                {
+                    wc.DownloadFile(remoteUri, destinationFilename);
+                    Console.WriteLine($"\t Download completed at {DateTime.Now}");
+
+                    long length = new System.IO.FileInfo(destinationFilename).Length;
+
+                    if (length == 0)
+                    {
+                        WriteWarning("File Size is 0 bytes. :( ");
+
+                    }
+
+                }
+                catch (Exception)
+                {
+                    WriteWarning($"Unable to download file at {remoteUri} to {destinationFilename}");
+                }
+
+
             }
         }
 
