@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System.Web;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace SessionDownloader
 {
@@ -39,13 +40,30 @@ namespace SessionDownloader
                 return;
             }
 
-            string allThatJson = DownloadSessionMetaData();
+            // Build 2019
+            string build2019 = "https://api.mybuild.techcommunity.microsoft.com/api/session/all";
+            string build2020 = "https://api.mybuild.microsoft.com/api/session/all";
 
-            dynamic sessions = JArray.Parse(allThatJson);
+            // Ignite 2019 
+            string ignite2019 = "https://api-myignite.techcommunity.microsoft.com/api/session/all";
 
-            Console.WriteLine($"{sessions.Count} talks found.");
+            // Build 2020
+            //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT152A
 
-            DownloadSessions(sessions);
+            string sourceData = build2020;
+
+            var x = new SessionLoader();
+            x.FeedUri = build2020;
+
+            WriteHighlight("Starting Metadata Download");
+            x.LoadSessionList();
+            WriteHighlight("Metadata Download Complete");
+
+            //dynamic sessions = JArray.Parse(allThatJson);
+
+            Console.WriteLine($"{x.Sessions.Count} talks found.");
+
+            DownloadSessions(x.Sessions);
 
             Console.WriteLine($"Finished at {DateTime.Now}");
 
@@ -53,6 +71,8 @@ namespace SessionDownloader
 
         }
 
+
+        [Obsolete]
         private static string DownloadSessionMetaData()
         {
             WebClient webClient = new WebClient();
@@ -71,10 +91,15 @@ namespace SessionDownloader
 
             string sourceData = build2020;
 
+            var x = new SessionLoader();
+            x.FeedUri = build2020;
+
             WriteHighlight("Starting Metadata Download");
-            string allThatJson = webClient.DownloadString(sourceData);
+            x.LoadSessionList();
             WriteHighlight("Metadata Download Complete");
-            return allThatJson;
+
+            return string.Empty;
+
         }
 
         private static Arguments ParseArgs(string[] args)
@@ -92,31 +117,28 @@ namespace SessionDownloader
             };
         }
 
-        private static void DownloadSessions(dynamic sessions)
+        private static void DownloadSessions(List<Session> sessions)
         {
-            int i = 0;
-
             foreach (var session in sessions)
             {
-
                 Console.WriteLine("*****************************");
-                WriteHighlight($"Index: {i}");
-                Console.WriteLine($"Session: {session.title}");
-                Console.WriteLine($"Duration: {session.durationInMinutes}");
-                Console.WriteLine($"onDemandLink: {session.onDemand}");
+                Console.WriteLine($"Index: {session.Index}");
+                Console.WriteLine($"Code: {session.Code}");
+                Console.WriteLine($"Title: {session.Title}");
+                Console.WriteLine($"Level: {session.Level}");
+                Console.WriteLine($"Embed: {session.EmbedUrl}");
 
-                DownloadSlides(session);
-
+                //DownloadSlides(session);
                 DownloadVideo(session);
 
-                i++;
+                // TODO: downloadCaptions
+
             }
         }
 
-        private static void DownloadVideo(dynamic session)
+        private static void DownloadVideo(Session session)
         {
-
-            string downloadUrl = GetDownloadUrl(session);
+            string downloadUrl = session.MediaUrl;
 
             if (downloadUrl != string.Empty)
             {
@@ -124,8 +146,8 @@ namespace SessionDownloader
 
                 string remoteUri = downloadUrl;
 
-                string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
-                string destinationFilename = $"{arguments.DestinationPath}{session.sessionCode}-{scrubbedSessionTitle}.mp4";
+                string scrubbedSessionTitle = ScrubSessionTitle(session.Title);
+                string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.mp4";
 
                 if (File.Exists(destinationFilename) == true)
                 {
@@ -134,46 +156,10 @@ namespace SessionDownloader
                 else
                 {
                     DownloadFile(remoteUri, destinationFilename);
-
                 }
             }
         }
 
-        private static string GetDownloadUrl(dynamic session)
-        {
-            string downloadUrl = string.Empty;
-
-            if (session.downloadVideoLink != string.Empty && session.downloadVideoLink != null)
-            {
-                downloadUrl = session.downloadVideoLink;
-            }
-            else
-            {
-
-                string sessionCode = session.sessionCode;
-
-                if(session.onDemand == string.Empty || session.onDemand == null)
-                {
-                    downloadUrl = string.Empty;
-                }
-                else
-                {
-                    string correctedSessionCode = InferCorrectedSessionCode(session);
-
-                    downloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4/{correctedSessionCode}";
-
-                }
-
-                //https://medius.studios.ms/Embed/video-nc/B20-BDL111
-                //https://medius.studios.ms/video/asset/HIGHMP4/B20-BDL101
-
-
-                //downloadUrl = session.onDemand;
-            }
-
-            return downloadUrl;
-
-        }
 
         private static string InferCorrectedSessionCode(dynamic session)
         {
@@ -198,36 +184,36 @@ namespace SessionDownloader
             return correctedSessionCode;
         }
 
-        private static void DownloadSlides(dynamic session)
+        private static void DownloadSlides(Session session)
         {
-            if (session.slideDeck != string.Empty)
-            {
-                Console.WriteLine("Slide deck available.");
+            //if (session.slideDeck != string.Empty)
+            //{
+            //    Console.WriteLine("Slide deck available.");
 
-                string remoteUri = session.slideDeck.ToString();
+            //    string remoteUri = session.slideDeck.ToString();
 
-                string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
-                string destinationFilename = $"{arguments.DestinationPath}{scrubbedSessionTitle}.pptx";
+            //    string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
+            //    string destinationFilename = $"{arguments.DestinationPath}{scrubbedSessionTitle}.pptx";
 
-                if (File.Exists(destinationFilename) == true)
-                {
-                    WriteWarning("File exists. Skipping");
-                }
-                else
-                {
-                    try
-                    {
-                        DownloadFile(remoteUri, destinationFilename);
-                    }
-                    catch (Exception exception)
-                    {
-                        WriteError($"Error downloading {remoteUri} to {destinationFilename}");
-                    }
+            //    if (File.Exists(destinationFilename) == true)
+            //    {
+            //        WriteWarning("File exists. Skipping");
+            //    }
+            //    else
+            //    {
+            //        try
+            //        {
+            //            DownloadFile(remoteUri, destinationFilename);
+            //        }
+            //        catch (Exception exception)
+            //        {
+            //            WriteError($"Error downloading {remoteUri} to {destinationFilename}");
+            //        }
 
-                }
+            //    }
 
-                Console.WriteLine($"{destinationFilename}");
-            }
+            //    Console.WriteLine($"{destinationFilename}");
+            //}
         }
 
         private static void DownloadFile(string remoteUri, string destinationFilename)
