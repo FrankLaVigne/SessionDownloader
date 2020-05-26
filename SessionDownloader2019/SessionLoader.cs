@@ -9,6 +9,17 @@ using System.Linq;
 
 namespace SessionDownloader
 {
+    /* Important fields in the JSON
+     * 
+     * "slideDeck": "https://medius.studios.ms/video/asset/PPT/IG19-THR3034",
+     * "onDemand": "https://medius.studios.ms/Embed/Video-nc/IG19-THR3034",
+     * "downloadVideoLink": "https://medius.studios.ms/video/asset/HIGHMP4/IG19-THR3034",
+     * "onDemandThumbnail": "https://medius.studios.ms/video/asset/THUMBNAIL/IG19-THR3034",
+     * "captionFileLink" : 
+     * 
+     */
+
+
     public class SessionLoader : ISessionLoader
     {
         public string FeedUri { get; set; }
@@ -47,7 +58,9 @@ namespace SessionDownloader
                     Level = sessionElement.level,
                     MediaUrl = InferMediaUrl(sessionElement),
                     Code = sessionElement.sessionCode,
-                    Title = sessionElement.title
+                    Title = sessionElement.title,
+                    SlideDeckUrl = sessionElement.slideDeck,
+                    CaptionsUrl = sessionElement.captionFileLink
                 };
 
                 this.Sessions.Add(session);

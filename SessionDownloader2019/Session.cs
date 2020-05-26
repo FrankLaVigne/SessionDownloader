@@ -12,6 +12,8 @@ namespace SessionDownloader
         public string EmbedUrl { get; set; }
         public string Code { get; set; }
         public string MediaUrl { get; set; }
+        public string SlideDeckUrl { get; set; }
+        public string CaptionsUrl { get; set; }
         public int Duration { get; set; }
         public List<string> SpeakerNames { get; set; }
         public string Level { get; set; }
