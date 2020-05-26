@@ -2,7 +2,7 @@
   "profiles": {
     "SessionDownloader2019": {
       "commandName": "Project",
-      "commandLineArgs": "d:\\b20\\"
+      "commandLineArgs": "c:\\b20\\"
     }
   }
 }

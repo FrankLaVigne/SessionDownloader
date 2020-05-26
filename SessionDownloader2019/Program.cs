@@ -16,6 +16,16 @@ namespace SessionDownloader
         private static ConsoleColor defaultForegroundConsoleColor = Console.ForegroundColor;
         private static ConsoleColor defaultBackgroundConsoleColor = Console.BackgroundColor;
 
+        enum MediaType
+        {
+            None,
+            Video,
+            Slides,
+            Captions,
+            All
+        }
+
+
         enum MessageLevel
         {
             Normal,
@@ -62,6 +72,12 @@ namespace SessionDownloader
             //dynamic sessions = JArray.Parse(allThatJson);
 
             Console.WriteLine($"{x.Sessions.Count} talks found.");
+
+            var slideDeckCount = x.Sessions.Where(y => y.SlideDeckUrl != string.Empty).Count();
+            var captionsCount = x.Sessions.Where(y => y.CaptionsUrl != string.Empty).Count();
+
+            Console.WriteLine($"Sessions with Slides {slideDeckCount}");
+            Console.WriteLine($"Sessions with Slides {captionsCount}");
 
             DownloadSessions(x.Sessions);
 
@@ -127,11 +143,14 @@ namespace SessionDownloader
                 Console.WriteLine($"Title: {session.Title}");
                 Console.WriteLine($"Level: {session.Level}");
                 Console.WriteLine($"Embed: {session.EmbedUrl}");
+                Console.WriteLine($"Slides: {session.SlideDeckUrl}");
+                Console.WriteLine($"Captions: {session.CaptionsUrl}");
+
+                // TODO: add parameter switch to control media type
 
                 //DownloadSlides(session);
                 DownloadVideo(session);
-
-                // TODO: downloadCaptions
+                DownloadCaptions(session);
 
             }
         }
@@ -186,35 +205,77 @@ namespace SessionDownloader
 
         private static void DownloadSlides(Session session)
         {
-            //if (session.slideDeck != string.Empty)
-            //{
-            //    Console.WriteLine("Slide deck available.");
+            if (session.SlideDeckUrl != string.Empty)
+            {
+                Console.WriteLine("Slide deck available.");
 
-            //    string remoteUri = session.slideDeck.ToString();
+                string remoteUri = session.SlideDeckUrl;
 
-            //    string scrubbedSessionTitle = ScrubSessionTitle(session.title.ToString());
-            //    string destinationFilename = $"{arguments.DestinationPath}{scrubbedSessionTitle}.pptx";
+                string scrubbedSessionTitle = ScrubSessionTitle(session.Title);
+                string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.pptx";
 
-            //    if (File.Exists(destinationFilename) == true)
-            //    {
-            //        WriteWarning("File exists. Skipping");
-            //    }
-            //    else
-            //    {
-            //        try
-            //        {
-            //            DownloadFile(remoteUri, destinationFilename);
-            //        }
-            //        catch (Exception exception)
-            //        {
-            //            WriteError($"Error downloading {remoteUri} to {destinationFilename}");
-            //        }
+                if (File.Exists(destinationFilename) == true)
+                {
+                    WriteWarning("File exists. Skipping");
+                }
+                else
+                {
+                    try
+                    {
+                        Console.WriteLine($"Downloading ${destinationFilename}");
+                        Console.WriteLine($"Starting at ${DateTime.Now}");
+                        DownloadFile(remoteUri, destinationFilename);
+                        Console.WriteLine($"Finishing at ${DateTime.Now}");
+                    }
+                    catch (Exception exception)
+                    {
+                        WriteError($"Error downloading {remoteUri} to {destinationFilename}");
+                        WriteError($"{exception.Message}");
+                    }
 
-            //    }
+                }
 
-            //    Console.WriteLine($"{destinationFilename}");
-            //}
+                Console.WriteLine($"{destinationFilename}");
+            }
         }
+
+
+        private static void DownloadCaptions(Session session)
+        {
+            if (session.CaptionsUrl != string.Empty)
+            {
+                Console.WriteLine("Slide deck available.");
+
+                string remoteUri = session.CaptionsUrl;
+
+                string scrubbedSessionTitle = ScrubSessionTitle(session.Title);
+                string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.txt";
+
+                if (File.Exists(destinationFilename) == true)
+                {
+                    WriteWarning("File exists. Skipping");
+                }
+                else
+                {
+                    try
+                    {
+                        Console.WriteLine($"Downloading ${destinationFilename}");
+                        Console.WriteLine($"Starting at ${DateTime.Now}");
+                        DownloadFile(remoteUri, destinationFilename);
+                        Console.WriteLine($"Finishing at ${DateTime.Now}");
+                    }
+                    catch (Exception exception)
+                    {
+                        WriteError($"Error downloading {remoteUri} to {destinationFilename}");
+                        WriteError($"{exception.Message}");
+                    }
+
+                }
+
+                Console.WriteLine($"{destinationFilename}");
+            }
+        }
+
 
         private static void DownloadFile(string remoteUri, string destinationFilename)
         {
