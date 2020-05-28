@@ -86,17 +86,27 @@ namespace SessionDownloader
             //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT104B
             // *************************************************************************
 
-            string correctedSessionCode = string.Empty;
+            string correctedSessionDownloadUrl = string.Empty;
             string onDemandUrl = sessionElement.onDemand;
+
+            var downloadVideoLink = sessionElement.downloadVideoLink;
+
+            if (downloadVideoLink != null)
+            {
+                correctedSessionDownloadUrl = downloadVideoLink;
+
+                return correctedSessionDownloadUrl;
+            }
+
 
             if (onDemandUrl != string.Empty)
             {
                 int lastSlashIndex = onDemandUrl.LastIndexOf('/');
                 string actualCode = onDemandUrl.Substring(lastSlashIndex);
-                correctedSessionCode = $"https://medius.studios.ms/video/asset/HIGHMP4{actualCode}";
+                correctedSessionDownloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4{actualCode}";
             }
 
-            return correctedSessionCode;
+            return correctedSessionDownloadUrl;
         }
     }
 }

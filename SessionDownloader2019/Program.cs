@@ -82,8 +82,10 @@ namespace SessionDownloader
 
             var slideDeckCount = sessionLoader.Sessions.Where(y => y.SlideDeckUrl != string.Empty).Count();
             var captionsCount = sessionLoader.Sessions.Where(y => y.CaptionsUrl != string.Empty).Count();
+            var videoDownloadCount = sessionLoader.Sessions.Where(y => y.MediaUrl != string.Empty).Count();
 
             Console.WriteLine($"Session found: {sessionLoader.Sessions.Count}");
+            Console.WriteLine($"Sessions with Video: {videoDownloadCount}");
             Console.WriteLine($"Sessions with Slides: {slideDeckCount}");
             Console.WriteLine($"Sessions with Captions: {captionsCount}");
 
@@ -175,6 +177,7 @@ namespace SessionDownloader
 
         private static void DownloadSessions(List<Session> sessions, MediaType mediaType)
         {
+
             foreach (var session in sessions)
             {
                 Console.WriteLine("*****************************");
@@ -186,10 +189,27 @@ namespace SessionDownloader
                 Console.WriteLine($"Slides: {session.SlideDeckUrl}");
                 Console.WriteLine($"Captions: {session.CaptionsUrl}");
 
-                // TODO: add parameter switch to control media type
+                switch (mediaType)
+                {
+                    case MediaType.Video:
+                        DownloadVideo(session);
+                        break;
+                    case MediaType.Slides:
+                        DownloadSlide(session);
+                        break;
+                    case MediaType.Captions:
+                        DownloadCaptions(session);
+                        break;
+                    case MediaType.All:
+                        DownloadVideo(session);
+                        DownloadSlide(session);
+                        DownloadCaptions(session);
+                        break;
+                    default:
+                        break;
+                }
 
-                DownloadVideo(session);
-                DownloadCaptions(session);
+                Console.WriteLine("*****************************");
 
             }
         }
@@ -200,7 +220,7 @@ namespace SessionDownloader
 
             if (downloadUrl != string.Empty)
             {
-                Console.WriteLine("Video available.");
+                Console.WriteLine("Downloading Video");
 
                 string remoteUri = downloadUrl;
 
@@ -246,7 +266,7 @@ namespace SessionDownloader
         {
             if (session.SlideDeckUrl != string.Empty)
             {
-                Console.WriteLine("Slide deck available.");
+                Console.WriteLine("Downloading Slides");
 
                 string remoteUri = session.SlideDeckUrl;
 
@@ -283,7 +303,7 @@ namespace SessionDownloader
         {
             if (session.CaptionsUrl != string.Empty)
             {
-                Console.WriteLine("Slide deck available.");
+                Console.WriteLine("Downloading captions");
 
                 string remoteUri = session.CaptionsUrl;
 
