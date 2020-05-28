@@ -4,8 +4,27 @@ Starting in 2019, Build used a differnt format/web site for storing slides and v
 ## Update: May 2020
 I've updated the repo for Build 2020.
 
+## Update: May 28, 2020
+Parameterization added.
+
 ## No Frills
 This code is no frills and, since it does what I need, I'm probably not going to modify it anytime soon. If you're impatient, feel free to modify, and submit a PR.
+
+
+## Download from Ignite, Build, and More!
+
+### Parameters
+The program now supports paramters
+
+To get all the slides from Ignite 2019
+d:\I19\ https://api-myignite.techcommunity.microsoft.com/api/session/all s
+
+To get all the videos from Build 2020
+d:\b20\ https://api.mybuild.microsoft.com/api/session/all v
+
+To get all the captions from Build 2020
+d:\b20\ https://api.mybuild.microsoft.com/api/session/all c
+
 
 ## History
 It began humbly as a WPF app to capture all the sessions from PDC 2009. 
