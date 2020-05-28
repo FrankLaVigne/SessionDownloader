@@ -14,16 +14,41 @@ This code is no frills and, since it does what I need, I'm probably not going to
 ## Download from Ignite, Build, and More!
 
 ### Parameters
-The program now supports paramters
+The program now supports parameters
+
+#### File Download Path
+File path to a directory to download files to
+
+#### Feed URL
+Location of JSON file for session data
+
+#### Content Type
+
+One letter code based on the table below.
+
+| Code | Name     | Description           | 
+|------|----------|-----------------------|
+| A    | All      | Get all related files |
+| V    | Video    | Get session video     |
+| S    | Slides   | Get session slides    |
+| C    | Captions | Get session captions  |
+| N    | None     | Just show metadata    |
+
+
+
+#### Examples
 
 To get all the slides from Ignite 2019
-d:\I19\ https://api-myignite.techcommunity.microsoft.com/api/session/all s
+
+`d:\I19\ https://api-myignite.techcommunity.microsoft.com/api/session/all s`
 
 To get all the videos from Build 2020
-d:\b20\ https://api.mybuild.microsoft.com/api/session/all v
+
+`d:\b20\ https://api.mybuild.microsoft.com/api/session/all v`
 
 To get all the captions from Build 2020
-d:\b20\ https://api.mybuild.microsoft.com/api/session/all c
+
+`d:\b20\ https://api.mybuild.microsoft.com/api/session/all c`
 
 
 ## History
