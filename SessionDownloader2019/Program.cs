@@ -6,17 +6,23 @@ using System.Web;
 using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace SessionDownloader
 {
     class Program
     {
-        private static char[] invalidFilenameChars = { '\\', '/', ':', '*', '?', '"', '<', '>', '|', '\n', '.' };
+        private const int DESTINATION_PATH_ARG_INDEX = 0;
+        private const int BASE_URL_ARG_INDEX = 1;
+        private const int MEDIA_TYPE_ARG_INDEX = 2;
 
+        private static char[] invalidFilenameChars = { '\\', '/', ':', '*', '?', '"', '<', '>', '|', '\n', '.' };
         private static ConsoleColor defaultForegroundConsoleColor = Console.ForegroundColor;
         private static ConsoleColor defaultBackgroundConsoleColor = Console.BackgroundColor;
 
-        enum MediaType
+
+
+        public enum MediaType
         {
             None,
             Video,
@@ -37,12 +43,13 @@ namespace SessionDownloader
         public class Arguments
         {
             public string DestinationPath { get; set; }
+            public MediaType MediaType { get; set; }
+            public string FeedUrl { get; set; }
         }
 
         static Arguments arguments;
         static void Main(string[] args)
         {
-
             arguments = ParseArgs(args);
 
             if (arguments == null)
@@ -50,6 +57,7 @@ namespace SessionDownloader
                 return;
             }
 
+            // **************************************************************************************************
             // Build 2019
             string build2019 = "https://api.mybuild.techcommunity.microsoft.com/api/session/all";
             string build2020 = "https://api.mybuild.microsoft.com/api/session/all";
@@ -59,81 +67,113 @@ namespace SessionDownloader
 
             // Build 2020
             //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT152A
+            // **************************************************************************************************
 
             string sourceData = build2020;
 
-            var x = new SessionLoader();
-            x.FeedUri = build2020;
+            var sessionLoader  = new SessionLoader();
+            sessionLoader.FeedUri = arguments.FeedUrl;
 
-            WriteHighlight("Starting Metadata Download");
-            x.LoadSessionList();
-            WriteHighlight("Metadata Download Complete");
+            Console.WriteLine($"Feed: {arguments.FeedUrl}");
 
-            //dynamic sessions = JArray.Parse(allThatJson);
+            WriteHighlight("Starting Feed Download");
+            sessionLoader.LoadSessionList();
+            WriteHighlight("Metadata Feed Complete");
 
-            Console.WriteLine($"{x.Sessions.Count} talks found.");
+            var slideDeckCount = sessionLoader.Sessions.Where(y => y.SlideDeckUrl != string.Empty).Count();
+            var captionsCount = sessionLoader.Sessions.Where(y => y.CaptionsUrl != string.Empty).Count();
 
-            var slideDeckCount = x.Sessions.Where(y => y.SlideDeckUrl != string.Empty).Count();
-            var captionsCount = x.Sessions.Where(y => y.CaptionsUrl != string.Empty).Count();
+            Console.WriteLine($"Session found: {sessionLoader.Sessions.Count}");
+            Console.WriteLine($"Sessions with Slides: {slideDeckCount}");
+            Console.WriteLine($"Sessions with Captions: {captionsCount}");
 
-            Console.WriteLine($"Sessions with Slides {slideDeckCount}");
-            Console.WriteLine($"Sessions with Slides {captionsCount}");
-
-            DownloadSessions(x.Sessions);
+            if (arguments.MediaType != MediaType.None)
+            {
+                DownloadSessions(sessionLoader.Sessions, arguments.MediaType);
+            }                
 
             Console.WriteLine($"Finished at {DateTime.Now}");
-
             Console.ReadLine();
 
         }
 
 
-        [Obsolete]
-        private static string DownloadSessionMetaData()
-        {
-            WebClient webClient = new WebClient();
-
-            // TODO: find a more robust way to do this
-
-            // Build 2019
-            string build2019 = "https://api.mybuild.techcommunity.microsoft.com/api/session/all";
-            string build2020 = "https://api.mybuild.microsoft.com/api/session/all";
-
-            // Ignite 2019 
-            string ignite2019 = "https://api-myignite.techcommunity.microsoft.com/api/session/all";
-
-            // Build 2020
-            //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT152A
-
-            string sourceData = build2020;
-
-            var x = new SessionLoader();
-            x.FeedUri = build2020;
-
-            WriteHighlight("Starting Metadata Download");
-            x.LoadSessionList();
-            WriteHighlight("Metadata Download Complete");
-
-            return string.Empty;
-
-        }
-
         private static Arguments ParseArgs(string[] args)
         {
-            if (args.Length < 1)
+
+            if (args.Length < 2)
             {
-                WriteError("Please enter a destination path!");
+                Console.WriteLine("Please enter a destination path and base RSS feed URL!");
                 return null;
             }
-            var destinationPath = args[0];
+
+            var destinationPath = args[DESTINATION_PATH_ARG_INDEX];
+
+            if (destinationPath.Last() != '\\')
+            {
+                destinationPath = destinationPath + '\\';
+            }
+
+            var baseUrl = args[BASE_URL_ARG_INDEX];
+
+            try
+            {
+                Uri feed = new Uri(baseUrl);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("that is not a valid URL");
+                return null;
+            }
+
+            var downloadMediaType = ReadMediaTypeArg(args[MEDIA_TYPE_ARG_INDEX]);
 
             return new Arguments()
             {
-                DestinationPath = destinationPath
+                DestinationPath = destinationPath,
+                MediaType = downloadMediaType,
+                FeedUrl = baseUrl
             };
         }
 
-        private static void DownloadSessions(List<Session> sessions)
+        private static MediaType ReadMediaTypeArg(string mediaTypeArgument)
+        {
+            MediaType mediaType = MediaType.None;
+            try
+            {
+                var selectedMedia = mediaTypeArgument.ToLower().First();
+
+                switch (selectedMedia)
+                {
+                    case 'v':
+                        mediaType = MediaType.Video;
+                        break;
+                    case 'a':
+                        mediaType = MediaType.All;
+                        break;
+                    case 's':
+                        mediaType = MediaType.Slides;
+                        break;
+                    case 'c':
+                        mediaType = MediaType.Captions;
+                        break;
+                    default:
+                        mediaType = MediaType.None;
+                        break;
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("--------------------------------------------------");
+                Console.WriteLine($"Error: {exception.Message}");
+                Console.WriteLine("--------------------------------------------------");
+            }
+
+            return mediaType;
+
+        }
+
+        private static void DownloadSessions(List<Session> sessions, MediaType mediaType)
         {
             foreach (var session in sessions)
             {
@@ -148,7 +188,6 @@ namespace SessionDownloader
 
                 // TODO: add parameter switch to control media type
 
-                //DownloadSlides(session);
                 DownloadVideo(session);
                 DownloadCaptions(session);
 
@@ -203,7 +242,7 @@ namespace SessionDownloader
             return correctedSessionCode;
         }
 
-        private static void DownloadSlides(Session session)
+        private static void DownloadSlide(Session session)
         {
             if (session.SlideDeckUrl != string.Empty)
             {
@@ -337,7 +376,6 @@ namespace SessionDownloader
         {
             WriteMessage(message, MessageLevel.Highlight);
         }
-
 
         private static void WriteMessage(string message, MessageLevel messageLevel)
         {
