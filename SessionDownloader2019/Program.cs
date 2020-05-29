@@ -225,31 +225,8 @@ namespace SessionDownloader
         private static void DownloadFile(string remoteUri, string destinationFilename)
         {
             Console.WriteLine($"\t Download started at {DateTime.Now}");
-
-            using (WebClient wc = new WebClient())
-            {
-
-                try
-                {
-                    wc.DownloadFile(remoteUri, destinationFilename);
-                    Console.WriteLine($"\t Download completed at {DateTime.Now}");
-
-                    long length = new System.IO.FileInfo(destinationFilename).Length;
-
-                    if (length == 0)
-                    {
-                        WriteWarning("File Size is 0 bytes. :( ");
-
-                    }
-
-                }
-                catch (Exception)
-                {
-                    WriteWarning($"Unable to download file at {remoteUri} to {destinationFilename}");
-                }
-
-
-            }
+            var fd = new FileDownloader();
+            fd.DownloadFile(remoteUri, destinationFilename);
         }
 
 
