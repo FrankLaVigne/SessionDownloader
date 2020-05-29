@@ -7,30 +7,34 @@ using Newtonsoft.Json.Linq;
 using System.Linq;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using SessionDownloader.Utils;
 
 namespace SessionDownloader
 {
+
+    // ************************************************************************
+    // * Important URLs                                                       *
+    // ************************************************************************
+    // Build 2019
+    // https://api.mybuild.techcommunity.microsoft.com/api/session/all
+    // Build 2020
+    // https://api.mybuild.microsoft.com/api/session/all
+    // Ignite 2019 
+    // https://api-myignite.techcommunity.microsoft.com/api/session/all
+    // ************************************************************************
+
     class Program
     {
+        #region Private Members
+
         private const int DESTINATION_PATH_ARG_INDEX = 0;
         private const int BASE_URL_ARG_INDEX = 1;
         private const int MEDIA_TYPE_ARG_INDEX = 2;
 
-        private static char[] invalidFilenameChars = { '\\', '/', ':', '*', '?', '"', '<', '>', '|', '\n', '.' };
+        private static Arguments arguments;
+
         private static ConsoleColor defaultForegroundConsoleColor = Console.ForegroundColor;
         private static ConsoleColor defaultBackgroundConsoleColor = Console.BackgroundColor;
-
-
-
-        public enum MediaType
-        {
-            None,
-            Video,
-            Slides,
-            Captions,
-            All
-        }
-
 
         enum MessageLevel
         {
@@ -40,14 +44,8 @@ namespace SessionDownloader
             Error
         }
 
-        public class Arguments
-        {
-            public string DestinationPath { get; set; }
-            public MediaType MediaType { get; set; }
-            public string FeedUrl { get; set; }
-        }
+        #endregion
 
-        static Arguments arguments;
         static void Main(string[] args)
         {
             arguments = ParseArgs(args);
@@ -56,20 +54,6 @@ namespace SessionDownloader
             {
                 return;
             }
-
-            // **************************************************************************************************
-            // Build 2019
-            string build2019 = "https://api.mybuild.techcommunity.microsoft.com/api/session/all";
-            string build2020 = "https://api.mybuild.microsoft.com/api/session/all";
-
-            // Ignite 2019 
-            string ignite2019 = "https://api-myignite.techcommunity.microsoft.com/api/session/all";
-
-            // Build 2020
-            //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT152A
-            // **************************************************************************************************
-
-            string sourceData = build2020;
 
             var sessionLoader  = new SessionLoader();
             sessionLoader.FeedUri = arguments.FeedUrl;
@@ -99,82 +83,7 @@ namespace SessionDownloader
 
         }
 
-
-        private static Arguments ParseArgs(string[] args)
-        {
-
-            if (args.Length < 2)
-            {
-                Console.WriteLine("Please enter a destination path and base RSS feed URL!");
-                return null;
-            }
-
-            var destinationPath = args[DESTINATION_PATH_ARG_INDEX];
-
-            if (destinationPath.Last() != '\\')
-            {
-                destinationPath = destinationPath + '\\';
-            }
-
-            var baseUrl = args[BASE_URL_ARG_INDEX];
-
-            try
-            {
-                Uri feed = new Uri(baseUrl);
-            }
-            catch (Exception)
-            {
-                Console.WriteLine("that is not a valid URL");
-                return null;
-            }
-
-            var downloadMediaType = ReadMediaTypeArg(args[MEDIA_TYPE_ARG_INDEX]);
-
-            return new Arguments()
-            {
-                DestinationPath = destinationPath,
-                MediaType = downloadMediaType,
-                FeedUrl = baseUrl
-            };
-        }
-
-        private static MediaType ReadMediaTypeArg(string mediaTypeArgument)
-        {
-            MediaType mediaType = MediaType.None;
-            try
-            {
-                var selectedMedia = mediaTypeArgument.ToLower().First();
-
-                switch (selectedMedia)
-                {
-                    case 'v':
-                        mediaType = MediaType.Video;
-                        break;
-                    case 'a':
-                        mediaType = MediaType.All;
-                        break;
-                    case 's':
-                        mediaType = MediaType.Slides;
-                        break;
-                    case 'c':
-                        mediaType = MediaType.Captions;
-                        break;
-                    default:
-                        mediaType = MediaType.None;
-                        break;
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine("--------------------------------------------------");
-                Console.WriteLine($"Error: {exception.Message}");
-                Console.WriteLine("--------------------------------------------------");
-            }
-
-            return mediaType;
-
-        }
-
+        #region Methods to be moved out of this class
         private static void DownloadSessions(List<Session> sessions, MediaType mediaType)
         {
 
@@ -224,7 +133,7 @@ namespace SessionDownloader
 
                 string remoteUri = downloadUrl;
 
-                string scrubbedSessionTitle = ScrubSessionTitle(session.Title);
+                string scrubbedSessionTitle = FileSystem.ScrubFileName(session.Title);
                 string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.mp4";
 
                 if (File.Exists(destinationFilename) == true)
@@ -239,29 +148,6 @@ namespace SessionDownloader
         }
 
 
-        private static string InferCorrectedSessionCode(dynamic session)
-        {
-            // *************************************************************************
-            // What the embed link is
-            //https://medius.studios.ms/Embed/video-nc/B20-INT104B
-
-            // What the session code is
-            // B20-INT104C
-            // which gets turned into 
-            // https://medius.studios.ms/video/asset/HIGHMP4/B20-INT104C
-
-            // what actually works
-            //https://medius.studios.ms/video/asset/HIGHMP4/B20-INT104B
-            // *************************************************************************
-
-            string embedPrefix = "https://medius.studios.ms/Embed/video-nc/";
-
-            string onDemandUrl = session.onDemand;
-
-            string correctedSessionCode = onDemandUrl.Replace(embedPrefix, string.Empty);
-            return correctedSessionCode;
-        }
-
         private static void DownloadSlide(Session session)
         {
             if (session.SlideDeckUrl != string.Empty)
@@ -270,7 +156,7 @@ namespace SessionDownloader
 
                 string remoteUri = session.SlideDeckUrl;
 
-                string scrubbedSessionTitle = ScrubSessionTitle(session.Title);
+                string scrubbedSessionTitle = FileSystem.ScrubFileName(session.Title);
                 string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.pptx";
 
                 if (File.Exists(destinationFilename) == true)
@@ -307,7 +193,7 @@ namespace SessionDownloader
 
                 string remoteUri = session.CaptionsUrl;
 
-                string scrubbedSessionTitle = ScrubSessionTitle(session.Title);
+                string scrubbedSessionTitle = FileSystem.ScrubFileName(session.Title);
                 string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.txt";
 
                 if (File.Exists(destinationFilename) == true)
@@ -366,24 +252,89 @@ namespace SessionDownloader
             }
         }
 
-        private static string ScrubSessionTitle(string sessionTitle)
+
+        #endregion
+
+        #region Private Methods
+
+        private static Arguments ParseArgs(string[] args)
         {
-            var scrubbedString = sessionTitle;
 
-            invalidFilenameChars.ToList().ForEach(x =>
+            if (args.Length < 2)
             {
-                scrubbedString = scrubbedString.Replace(x, ' ');
-            });
+                Console.WriteLine("Please enter a destination path and base RSS feed URL!");
+                return null;
+            }
 
-            return scrubbedString;
+            var destinationPath = args[DESTINATION_PATH_ARG_INDEX];
+
+            if (destinationPath.Last() != '\\')
+            {
+                destinationPath = destinationPath + '\\';
+            }
+
+            var baseUrl = args[BASE_URL_ARG_INDEX];
+
+            try
+            {
+                Uri feed = new Uri(baseUrl);
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("that is not a valid URL");
+                return null;
+            }
+
+            var downloadMediaType = ReadMediaTypeArg(args[MEDIA_TYPE_ARG_INDEX]);
+
+            return new Arguments()
+            {
+                DestinationPath = destinationPath,
+                MediaType = downloadMediaType,
+                FeedUrl = baseUrl
+            };
         }
+        private static MediaType ReadMediaTypeArg(string mediaTypeArgument)
+        {
+            MediaType mediaType = MediaType.None;
+            try
+            {
+                var selectedMedia = mediaTypeArgument.ToLower().First();
 
+                switch (selectedMedia)
+                {
+                    case 'v':
+                        mediaType = MediaType.Video;
+                        break;
+                    case 'a':
+                        mediaType = MediaType.All;
+                        break;
+                    case 's':
+                        mediaType = MediaType.Slides;
+                        break;
+                    case 'c':
+                        mediaType = MediaType.Captions;
+                        break;
+                    default:
+                        mediaType = MediaType.None;
+                        break;
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("--------------------------------------------------");
+                Console.WriteLine($"Error: {exception.Message}");
+                Console.WriteLine("--------------------------------------------------");
+            }
+
+            return mediaType;
+
+        }
         private static void ResetConsoleColors()
         {
             Console.ForegroundColor = defaultForegroundConsoleColor;
             Console.BackgroundColor = defaultBackgroundConsoleColor;
         }
-
         private static void WriteError(string message)
         {
             WriteMessage(message, MessageLevel.Error);
@@ -396,7 +347,6 @@ namespace SessionDownloader
         {
             WriteMessage(message, MessageLevel.Highlight);
         }
-
         private static void WriteMessage(string message, MessageLevel messageLevel)
         {
             switch (messageLevel)
@@ -422,24 +372,21 @@ namespace SessionDownloader
 
 
         }
-
         private static void InvertConsoleColors()
         {
             Console.ForegroundColor = defaultBackgroundConsoleColor;
             Console.BackgroundColor = defaultForegroundConsoleColor;
         }
-
         private static void ErrorConsoleColors()
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.BackgroundColor = defaultBackgroundConsoleColor;
         }
-
         private static void WarningConsoleColors()
         {
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.BackgroundColor = defaultBackgroundConsoleColor;
         }
-
+        #endregion
     }
 }

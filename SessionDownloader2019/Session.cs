@@ -5,6 +5,9 @@ using System.Text;
 
 namespace SessionDownloader
 {
+    /// <summary>
+    /// POCO to store session data
+    /// </summary>
     public class Session
     {
         public int Index { get; set; }
