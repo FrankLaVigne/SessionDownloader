@@ -64,9 +64,12 @@ In 2015, I updated it to download the sessions from Build 2015. In 2016, I added
 Starting in 2019, Build used a different system.
 
 ## Future
-I'd like to add parameters, IoC, and some other goodies to make this a tad more robust.
+I'd like to add 
 
-Ok, a lot more robust.
+* Unit tests
+* more robust
+
+
 
 ### Flexible architecture
 It would be nice to modularize the code so that adding a new event would be as easy as creating a JSON file
