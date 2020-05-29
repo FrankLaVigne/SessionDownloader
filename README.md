@@ -1,11 +1,14 @@
 # SessionDownloader
 Starting in 2019, Build used a differnt format/web site for storing slides and video presentations. This made the venerable version (https://github.com/FrankLaVigne/SessionDownloaderLegacy) written for PDC 09 and subsequent events outdated. 
 
-## Update: May 2020
-I've updated the repo for Build 2020.
+## Updates
 
-## Update: May 28, 2020
-Parameterization added.
+### Updates: May 2020
+
+* Updated for Build 2020
+* Parameterization added
+* Caption support added
+* started code and project reogranization
 
 ## No Frills
 This code is no frills and, since it does what I need, I'm probably not going to modify it anytime soon. If you're impatient, feel free to modify, and submit a PR.
@@ -64,9 +67,6 @@ Starting in 2019, Build used a different system.
 I'd like to add parameters, IoC, and some other goodies to make this a tad more robust.
 
 Ok, a lot more robust.
-
-### Caption download support
-Now that captions are available, it would be nice to be able to download them in bulk as well.
 
 ### Flexible architecture
 It would be nice to modularize the code so that adding a new event would be as easy as creating a JSON file
