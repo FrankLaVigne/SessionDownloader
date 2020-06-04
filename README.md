@@ -13,7 +13,6 @@ Starting in 2019, Build used a differnt format/web site for storing slides and v
 ## No Frills
 This code is no frills and, since it does what I need, I'm probably not going to modify it anytime soon. If you're impatient, feel free to modify, and submit a PR.
 
-
 ## Download from Ignite, Build, and More!
 
 ### Parameters
@@ -53,6 +52,10 @@ To get all the captions from Build 2020
 
 `d:\b20\ https://api.mybuild.microsoft.com/api/session/all c`
 
+To find out what content is available from Build 2020
+
+`d:\b20\ https://api.mybuild.microsoft.com/api/session/all n`
+
 
 ## History
 It began humbly as a WPF app to capture all the sessions from PDC 2009. 
@@ -68,8 +71,3 @@ I'd like to add
 
 * Unit tests
 * more robust
-
-
-
-### Flexible architecture
-It would be nice to modularize the code so that adding a new event would be as easy as creating a JSON file
