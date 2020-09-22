@@ -21,6 +21,8 @@ namespace SessionDownloader
     // https://api.mybuild.microsoft.com/api/session/all
     // Ignite 2019 
     // https://api-myignite.techcommunity.microsoft.com/api/session/all
+    // Ignite 2020 
+    // https://api.myignite.microsoft.com/api/session/all
     // ************************************************************************
 
     class Program
