@@ -7,6 +7,10 @@ Starting in 2019, Build used a differnt format/web site for storing slides and v
 
 * Updated for Ignite 2020
 * Currently just the videos
+* Certain fields are not in the main JSON document, but the video download URLs may be inferred (Details below)
+* Still working on the captions and the slide decks
+* This is no frills, hence the synchronous downloads and simple UI
+* Pull requests welcome ;)
 
 To get all the videos from Ignite 2020
 
@@ -15,7 +19,6 @@ To get all the videos from Ignite 2020
 #### Details
 
 For some reason, the video download URLs are not in the JSON yet, I need to infer the video download URLs via various means. If it's wrong, it downloads a file string stating that there's an error. This error message is 22 bytes. The code deletes any downloaded files 22 bytes long.
-
 
 
 ### Updates: May 2020
