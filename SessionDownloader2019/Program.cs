@@ -66,7 +66,7 @@ namespace SessionDownloader
             sessionLoader.LoadSessionList();
             WriteHighlight("Metadata Feed Complete");
 
-            var slideDeckCount = sessionLoader.Sessions.Where(y => y.SlideDeckUrl != string.Empty).Count();
+            var slideDeckCount = sessionLoader.Sessions.Where(y => y.SlideDeckUrl != null && y.SlideDeckUrl != string.Empty).Count();
             var captionsCount = sessionLoader.Sessions.Where(y => y.CaptionsUrl != string.Empty).Count();
             var videoDownloadCount = sessionLoader.Sessions.Where(y => y.MediaUrl != string.Empty).Count();
 

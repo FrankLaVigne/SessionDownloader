@@ -99,12 +99,38 @@ namespace SessionDownloader
             }
 
 
-            if (onDemandUrl != string.Empty)
+            if (onDemandUrl != null && onDemandUrl != string.Empty)
             {
                 int lastSlashIndex = onDemandUrl.LastIndexOf('/');
                 string actualCode = onDemandUrl.Substring(lastSlashIndex);
                 correctedSessionDownloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4{actualCode}";
             }
+            else
+            {
+                // HACK: for Ignite 2020
+                // url that works
+                //                                                     Session Code  
+                //                                                    /
+                // https://medius.studios.ms/video/asset/HIGHMP4/IG20-DB106
+
+                string sessionCode = sessionElement.sessionCode;
+
+                // Session code
+                // "ATE-DB112-R1"
+
+                int dashCount = sessionCode.Count(f => f == '-');
+
+                var shortSessionCode = sessionCode;
+
+                if (dashCount > 0)
+                {
+                    shortSessionCode = sessionCode.Split('-')[1];
+                }
+
+                correctedSessionDownloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4/IG20-{shortSessionCode}";
+
+            }
+
 
             return correctedSessionDownloadUrl;
         }

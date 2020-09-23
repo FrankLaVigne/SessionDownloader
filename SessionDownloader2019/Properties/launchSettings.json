@@ -2,7 +2,7 @@
   "profiles": {
     "SessionDownloader2019": {
       "commandName": "Project",
-      "commandLineArgs": "d:\\b20\\captions\\ https://api.mybuild.microsoft.com/api/session/all c"
+      "commandLineArgs": "d:\\i20\\ https://api.myignite.microsoft.com/api/session/all v"
     }
   }
 }

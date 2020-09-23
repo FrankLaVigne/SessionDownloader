@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Text;
 
@@ -16,14 +17,16 @@ namespace SessionDownloader.Utils
             {
                 try
                 {
+                    Console.WriteLine($"\t Downloading {remoteUrl}");
                     wc.DownloadFile(remoteUrl, destinationFilename);
                     Console.WriteLine($"\t Download completed at {DateTime.Now}");
 
-                    //long length = new System.IO.FileInfo(destinationFilename).Length;
-                    //if (length == 0)
-                    //{
-                    //    WriteWarning("File Size is 0 bytes. :( ");
-                    //}
+                    long length = new FileInfo(destinationFilename).Length;
+                    if (length == 22)
+                    {
+                        Console.WriteLine($"\t File invalid. Deleting.");
+                        File.Delete(destinationFilename);
+                    }
                 }
                 catch (Exception)
                 {
