@@ -3,6 +3,21 @@ Starting in 2019, Build used a differnt format/web site for storing slides and v
 
 ## Updates
 
+### Updates: September 2020
+
+* Updated for Ignite 2020
+* Currently just the videos
+
+To get all the videos from Ignite 2020
+
+`d:\i20\ https://api.myignite.microsoft.com/api/session/all v`
+
+#### Details
+
+For some reason, the video download URLs are not in the JSON yet, I need to infer the video download URLs via various means. If it's wrong, it downloads a file string stating that there's an error. This error message is 22 bytes. The code deletes any downloaded files 22 bytes long.
+
+
+
 ### Updates: May 2020
 
 * Updated for Build 2020
