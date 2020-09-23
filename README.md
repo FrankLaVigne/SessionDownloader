@@ -1,6 +1,9 @@
 # SessionDownloader
 Starting in 2019, Build used a differnt format/web site for storing slides and video presentations. This made the venerable version (https://github.com/FrankLaVigne/SessionDownloaderLegacy) written for PDC 09 and subsequent events outdated. 
 
+I spend time re-vamping the code in 2019 to work with the new JSON format feed. I drew inspiration (and URLs) from the PowerShell script at https://github.com/michelderooij/Get-EventSession
+
+
 ## Updates
 
 ### Updates: September 2020
