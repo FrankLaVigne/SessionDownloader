@@ -10,6 +10,7 @@ namespace SessionDownloader
         Video,
         Slides,
         Captions,
+        Thumbnails,
         All
     }
 

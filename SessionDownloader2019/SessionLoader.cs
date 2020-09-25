@@ -19,17 +19,24 @@ namespace SessionDownloader
      * 
      */
 
-
+    
     public class SessionLoader : ISessionLoader
     {
+        #region Public Properties
         public string FeedUri { get; set; }
         public List<Session> Sessions { get; set; }
+
+        #endregion
+
+        #region Constructors
 
         public SessionLoader()
         {
             this.Sessions = new List<Session>();
         }
+        #endregion
 
+        #region Public Methods
         public void LoadSessionList()
         {
             using (WebClient webClient = new WebClient())
@@ -37,10 +44,12 @@ namespace SessionDownloader
                 string sessionFeedContents = webClient.DownloadString(this.FeedUri);
                 ParseSessionFeed(sessionFeedContents);
             }
-
-
-
         }
+
+        #endregion
+
+
+        #region Private Methods
 
         private void ParseSessionFeed(string sessionFeedContents)
         {
@@ -50,14 +59,20 @@ namespace SessionDownloader
 
             foreach (var sessionElement in sessionFeed)
             {
+                string shortCode = ExtractShortCode(sessionElement);
+                string mediaUrl = InferMediaUrl(sessionElement, shortCode);
+                string thumbnailUrl = InferThumbnailUrl(shortCode);
+
                 Session session = new Session()
                 {
                     Index = i,
                     Duration = sessionElement.durationInMinutes,
                     EmbedUrl = sessionElement.onDemand,
                     Level = sessionElement.level,
-                    MediaUrl = InferMediaUrl(sessionElement),
+                    MediaUrl = mediaUrl,
+                    ThumbnailUrl = thumbnailUrl,
                     Code = sessionElement.sessionCode,
+                    ShortCode = shortCode,
                     Title = sessionElement.title,
                     SlideDeckUrl = sessionElement.slideDeck,
                     CaptionsUrl = sessionElement.captionFileLink
@@ -66,12 +81,39 @@ namespace SessionDownloader
                 this.Sessions.Add(session);
 
                 i++;
-            }
+           }
 
 
         }
 
-        private string InferMediaUrl(dynamic sessionElement)
+        private string InferThumbnailUrl(string shortCode)
+        {
+            return $"https://medius.studios.ms/video/asset/THUMBNAIL/IG20-{shortCode}";
+        }
+
+        private string ExtractShortCode(dynamic sessionElement)
+        {
+            // HACK: for Ignite 2020
+            // url that works
+            //                                                     Session Code  
+            //                                                    /
+            // https://medius.studios.ms/video/asset/HIGHMP4/IG20-DB106
+
+            string sessionCode = sessionElement.sessionCode;
+            var shortSessionCode = sessionCode;
+
+            int dashCount = sessionCode.Count(f => f == '-');
+
+            if (dashCount > 0)
+            {
+                shortSessionCode = sessionCode.Split('-')[1];
+            }
+
+            return shortSessionCode;
+
+        }
+
+        private string InferMediaUrl(dynamic sessionElement, string shortSessionCode)
         {
             // *************************************************************************
             // What the embed link is
@@ -107,32 +149,11 @@ namespace SessionDownloader
             }
             else
             {
-                // HACK: for Ignite 2020
-                // url that works
-                //                                                     Session Code  
-                //                                                    /
-                // https://medius.studios.ms/video/asset/HIGHMP4/IG20-DB106
-
-                string sessionCode = sessionElement.sessionCode;
-
-                // Session code
-                // "ATE-DB112-R1"
-
-                int dashCount = sessionCode.Count(f => f == '-');
-
-                var shortSessionCode = sessionCode;
-
-                if (dashCount > 0)
-                {
-                    shortSessionCode = sessionCode.Split('-')[1];
-                }
-
                 correctedSessionDownloadUrl = $"https://medius.studios.ms/video/asset/HIGHMP4/IG20-{shortSessionCode}";
-
             }
-
-
             return correctedSessionDownloadUrl;
         }
+
+        #endregion
     }
 }

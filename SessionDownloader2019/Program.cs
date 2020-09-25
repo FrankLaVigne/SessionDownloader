@@ -85,11 +85,13 @@ namespace SessionDownloader
             var slideDeckCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.SlideDeckUrl) == false).Count();
             var captionsCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.CaptionsUrl) == false).Count();
             var videoDownloadCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.MediaUrl) == false).Count();
+            var thumbnailCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.ThumbnailUrl) == false).Count();
 
             Console.WriteLine($"Sessions found: {sessionLoader.Sessions.Count}");
             Console.WriteLine($" Sessions with Video: {videoDownloadCount}");
             Console.WriteLine($" Sessions with Slides: {slideDeckCount}");
             Console.WriteLine($" Sessions with Captions: {captionsCount}");
+            Console.WriteLine($" Sessions with Thumbnails: {thumbnailCount}");
         }
 
         #region Methods to be moved out of this class
@@ -99,12 +101,15 @@ namespace SessionDownloader
             foreach (var session in sessions)
             {
                 Console.WriteLine("*****************************");
+                Console.WriteLine($"Code/ShortCode: {session.Code} / {session.ShortCode}");
+                Console.WriteLine("*****************************");
                 Console.WriteLine($"Index: {session.Index}");
                 Console.WriteLine($"Code: {session.Code}");
                 Console.WriteLine($"Title: {session.Title}");
                 Console.WriteLine($"Level: {session.Level}");
                 Console.WriteLine($"Embed: {session.EmbedUrl}");
                 Console.WriteLine($"Slides: {session.SlideDeckUrl}");
+                Console.WriteLine($"Thumb: {session.ThumbnailUrl}");
                 Console.WriteLine($"Captions: {session.CaptionsUrl}");
 
                 switch (mediaType)
@@ -118,9 +123,13 @@ namespace SessionDownloader
                     case MediaType.Captions:
                         DownloadCaptions(session);
                         break;
+                    case MediaType.Thumbnails:
+                        DownloadThumbnail(session);
+                        break;
                     case MediaType.All:
                         DownloadVideo(session);
                         DownloadSlide(session);
+                        DownloadThumbnail(session);
                         DownloadCaptions(session);
                         break;
                     default:
@@ -144,6 +153,30 @@ namespace SessionDownloader
 
                 string scrubbedSessionTitle = FileSystem.ScrubFileName(session.Title);
                 string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.mp4";
+
+                if (File.Exists(destinationFilename) == true)
+                {
+                    Console.WriteLine("File exists. Skipping");
+                }
+                else
+                {
+                    DownloadFile(remoteUri, destinationFilename);
+                }
+            }
+        }
+
+        private static void DownloadThumbnail(Session session)
+        {
+            string downloadUrl = session.ThumbnailUrl;
+
+            if (downloadUrl != string.Empty)
+            {
+                Console.WriteLine("Downloading Thumbnail");
+
+                string remoteUri = downloadUrl;
+
+                string scrubbedSessionTitle = FileSystem.ScrubFileName(session.Title);
+                string destinationFilename = $"{arguments.DestinationPath}{session.Code}-{scrubbedSessionTitle}.jpg";
 
                 if (File.Exists(destinationFilename) == true)
                 {
@@ -305,6 +338,9 @@ namespace SessionDownloader
                         break;
                     case 'c':
                         mediaType = MediaType.Captions;
+                        break;
+                    case 't':
+                        mediaType = MediaType.Thumbnails;
                         break;
                     default:
                         mediaType = MediaType.None;
