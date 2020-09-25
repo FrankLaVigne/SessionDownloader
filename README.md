@@ -9,9 +9,10 @@ I spend time re-vamping the code in 2019 to work with the new JSON format feed. 
 ### Updates: September 2020
 
 * Updated for Ignite 2020
-* Currently just the videos
+* Added thumbnail support
+* Videos and captions from Ignite 2020 now work
+* Still working on the slide decks
 * Certain fields are not in the main JSON document, but the video download URLs may be inferred (Details below)
-* Still working on the captions and the slide decks
 * This is no frills, hence the synchronous downloads and simple UI
 * Pull requests welcome ;)
 
