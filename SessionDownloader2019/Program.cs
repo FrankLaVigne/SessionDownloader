@@ -32,11 +32,13 @@ namespace SessionDownloader
         private const int DESTINATION_PATH_ARG_INDEX = 0;
         private const int BASE_URL_ARG_INDEX = 1;
         private const int MEDIA_TYPE_ARG_INDEX = 2;
+        private const MediaType DEFAULT_MEDIA_TYPE = MediaType.None;
 
         private static Arguments arguments;
 
         private static ConsoleColor defaultForegroundConsoleColor = Console.ForegroundColor;
         private static ConsoleColor defaultBackgroundConsoleColor = Console.BackgroundColor;
+
 
         enum MessageLevel
         {
@@ -57,7 +59,7 @@ namespace SessionDownloader
                 return;
             }
 
-            var sessionLoader  = new SessionLoader();
+            var sessionLoader = new SessionLoader();
             sessionLoader.FeedUri = arguments.FeedUrl;
 
             Console.WriteLine($"Feed: {arguments.FeedUrl}");
@@ -66,23 +68,28 @@ namespace SessionDownloader
             sessionLoader.LoadSessionList();
             WriteHighlight("Metadata Feed Complete");
 
-            var slideDeckCount = sessionLoader.Sessions.Where(y => y.SlideDeckUrl != null && y.SlideDeckUrl != string.Empty).Count();
-            var captionsCount = sessionLoader.Sessions.Where(y => y.CaptionsUrl != string.Empty).Count();
-            var videoDownloadCount = sessionLoader.Sessions.Where(y => y.MediaUrl != string.Empty).Count();
-
-            Console.WriteLine($"Session found: {sessionLoader.Sessions.Count}");
-            Console.WriteLine($"Sessions with Video: {videoDownloadCount}");
-            Console.WriteLine($"Sessions with Slides: {slideDeckCount}");
-            Console.WriteLine($"Sessions with Captions: {captionsCount}");
+            DisplaySessionMetaDataCounts(sessionLoader);
 
             if (arguments.MediaType != MediaType.None)
             {
                 DownloadSessions(sessionLoader.Sessions, arguments.MediaType);
-            }                
+            }
 
             Console.WriteLine($"Finished at {DateTime.Now}");
             Console.ReadLine();
 
+        }
+
+        private static void DisplaySessionMetaDataCounts(SessionLoader sessionLoader)
+        {
+            var slideDeckCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.SlideDeckUrl) == false).Count();
+            var captionsCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.CaptionsUrl) == false).Count();
+            var videoDownloadCount = sessionLoader.Sessions.Where(y => String.IsNullOrEmpty(y.MediaUrl) == false).Count();
+
+            Console.WriteLine($"Sessions found: {sessionLoader.Sessions.Count}");
+            Console.WriteLine($" Sessions with Video: {videoDownloadCount}");
+            Console.WriteLine($" Sessions with Slides: {slideDeckCount}");
+            Console.WriteLine($" Sessions with Captions: {captionsCount}");
         }
 
         #region Methods to be moved out of this class
@@ -264,7 +271,12 @@ namespace SessionDownloader
                 return null;
             }
 
-            var downloadMediaType = ReadMediaTypeArg(args[MEDIA_TYPE_ARG_INDEX]);
+            MediaType downloadMediaType = DEFAULT_MEDIA_TYPE;
+
+            if (args.Length > 2)
+            {
+                downloadMediaType = ReadMediaTypeArg(args[MEDIA_TYPE_ARG_INDEX]);
+            }
 
             return new Arguments()
             {
