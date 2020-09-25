@@ -55,6 +55,7 @@ One letter code based on the table below.
 | V    | Video    | Get session video     |
 | S    | Slides   | Get session slides    |
 | C    | Captions | Get session captions  |
+| T    | Thumbnails | Get session thumbnails  |
 | N    | None     | Just show metadata    |
 
 
